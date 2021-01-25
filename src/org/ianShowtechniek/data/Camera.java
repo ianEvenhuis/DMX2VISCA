@@ -5,6 +5,7 @@ import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.util.Arrays;
 
 import static org.ianShowtechniek.util.Util.integerTo2Hex;
 import static org.ianShowtechniek.util.Util.integerTo4Hex;
@@ -16,7 +17,7 @@ public class Camera {
     public static String CAMERA_FOCUS = "8010448";
     public static String CAMERA_IRIS = " 8101044B0000";
     public static String CAMERA_SHUTTER = "8101044A0000";
-    public static String CAMERA_END = "81";
+    public static String CAMERA_END = "FF";
 
     private String ip;
     private int port;
@@ -47,7 +48,11 @@ public class Camera {
     }
 
     public void sendPanTilt(int pan, int tilt) {
-        sendCommand(CAMERA_POSITION + integerTo4Hex(pan) + integerTo4Hex(tilt) + CAMERA_END);
+        String pans = integerTo4Hex(pan);
+        String tilts = integerTo4Hex(tilt);
+        System.out.println(pans);
+        System.out.println(tilts);
+        sendCommand(CAMERA_POSITION + pans + tilts + CAMERA_END);
     }
 
     public void sendZoom(int zoom) {
@@ -63,12 +68,14 @@ public class Camera {
     }
 
     public void sendIris(int iris) {
-        sendCommand(CAMERA_SHUTTER + integerTo2Hex(iris) + CAMERA_END);
+        sendCommand(CAMERA_IRIS + integerTo2Hex(iris) + CAMERA_END);
     }
 
     private void sendCommand(String command) {
         byte[] binaryCommand = DatatypeConverter.parseHexBinary(command);
         try {
+            System.err.println(Arrays.toString(binaryCommand));
+
             outputStream.write(binaryCommand);
             outputStream.flush();
         } catch (IOException e) {

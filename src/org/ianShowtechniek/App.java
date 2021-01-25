@@ -10,7 +10,6 @@ import org.ianShowtechniek.util.logger.LogLevel;
 import org.ianShowtechniek.util.logger.Logger;
 import org.ianShowtechniek.util.logger.SimpleLogger;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -37,22 +36,57 @@ public class App {
             FileManager.saveCamera(cameraList);
         }
         cameraList = new ArrayList<>();
-        cameraList.add(new Camera("192.168.5.161", 1259, 1));
+
+        cameraList.add(new Camera("192.168.5.162", 1259, 1));
 
         logger.info("Added " + cameraList.size() + " Camera's");
         artNetBuffer = new ArtNetBuffer();
         artNetClient = new ArtNetClient(artNetBuffer);
 
-        artNetClient.start("10.1.10.104"); //todo add settings
+        artNetClient.start("192.168.5.3"); //todo add settingss
 
         init();
-        loop();
+
+
+        Camera camera = cameraList.get(0);
+
+        int pan = (int) Util.mapd(360, 0, 360, 0, 4884);
+
+        int res = 0;
+
+        if (pan > 2442) {
+            res += (pan - 2442);
+        }else{
+            res =  65536 + (pan - 2442);
+        }
+
+        System.out.println("pan " + pan);
+        System.out.println("tilt " + 0);
+        System.out.println("res " + res);
+
+
+        camera.sendPanTilt(res, 1);
+
+        try {
+            Thread.sleep(300);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        //camera.sendPanTilt(65536 - 2443, 1);
+
+
+        //loop();
 
     }
 
     public void init() {
         for (Camera camera : cameraList) {
-            camera.connect();
+            boolean result = camera.connect();
+            if (result) {
+                logger.info(Logger.ANSI_GREEN + "Connected with camera " + camera.getIp());
+            } else {
+                logger.warning("Couldn't connect with camera " + camera.getIp());
+            }
         }
     }
 
@@ -99,7 +133,7 @@ public class App {
             int i = camera.getAddress();
             i--;
             camera.sendPanTilt(Util.get16bitValue(data[i], data[i + 1]), Util.get16bitValue(data[i + 2], data[i + 3]));
-            camera.sendZoom(Util.get16bitValue(data[i + 4], data[i + 5])); //todo add the other functions
+            //camera.sendZoom(Util.get16bitValue(data[i + 4], data[i + 5])); //todo add the other functions
         }
 
 

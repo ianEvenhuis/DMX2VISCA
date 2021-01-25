@@ -75,4 +75,22 @@ public class Util {
         return (val & 0xFF);
     }
 
+    public static double mapd(double value, double lowOrg, double highOrg, double lowTar, double highTar) {
+        return lowTar + ((value - lowOrg) * (highTar - lowTar)) / (highOrg - lowOrg);
+    }
+
+    /**
+     * So apperenly the value only goes between (65536 - 2242) and (0 + 2442) which both are camera facing back wards
+     * @param degree
+     * @return
+     */
+    public int mapPan(int degree){
+        int pan = (int) Util.mapd(degree, 0, 360, 0, 4884);
+
+        if (pan > 2442) {
+            return (pan - 2442);
+        }else{
+            return  65536 + (pan - 2442);
+        }
+    }
 }
