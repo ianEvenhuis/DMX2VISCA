@@ -30,7 +30,7 @@ public class Util {
 
     public static String integerTo2Hex(int i) {
         i--;
-        if(i > 256) {
+        if (i > 256) {
             i = 256;
         }
         String s = Integer.toHexString(i).toUpperCase();
@@ -65,6 +65,14 @@ public class Util {
             e.printStackTrace();
         }
         return jarFile.getParentFile().getAbsolutePath();
+    }
+
+    public int get16bitValue(byte val1, byte val2) {
+        return (val1 & 0xff) | ((val2 & 0xff) << 8);
+    }
+
+    public int get8bitValue(byte val){
+        return (val & 0xFF);
     }
 
 }
