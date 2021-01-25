@@ -67,11 +67,11 @@ public class Util {
         return jarFile.getParentFile().getAbsolutePath();
     }
 
-    public int get16bitValue(byte val1, byte val2) {
+    public static int get16bitValue(byte val1, byte val2) {
         return (val1 & 0xff) | ((val2 & 0xff) << 8);
     }
 
-    public int get8bitValue(byte val){
+    public static int get8bitValue(byte val) {
         return (val & 0xFF);
     }
 

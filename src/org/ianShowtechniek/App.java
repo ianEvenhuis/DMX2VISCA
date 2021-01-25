@@ -3,6 +3,9 @@ package org.ianShowtechniek;
 import org.ianShowtechniek.data.Camera;
 import org.ianShowtechniek.data.Settings;
 import org.ianShowtechniek.io.FileManager;
+import org.ianShowtechniek.io.artnet.api.ArtNetBuffer;
+import org.ianShowtechniek.io.artnet.api.ArtNetClient;
+import org.ianShowtechniek.util.Util;
 import org.ianShowtechniek.util.logger.LogLevel;
 import org.ianShowtechniek.util.logger.Logger;
 import org.ianShowtechniek.util.logger.SimpleLogger;
@@ -20,32 +23,85 @@ public class App {
 
     List<Camera> cameraList = new ArrayList<>();
 
+    ArtNetClient artNetClient;
+    ArtNetBuffer artNetBuffer;
+
 
     public App() {
         //will load the settings file
         settings = FileManager.loadFile();
         //load the camera's
         cameraList = FileManager.loadCameras();
-        if(cameraList == null){
+        if (cameraList == null) {
             cameraList = new ArrayList<>();
             FileManager.saveCamera(cameraList);
         }
+        cameraList = new ArrayList<>();
+        cameraList.add(new Camera("192.168.5.161", 1259, 1));
 
-        cameraList.add(new Camera("192.168.5.161", settings.getVisca_Port(), 1));
-        cameraList.add(new Camera("192.168.5.161", settings.getVisca_Port(), 1));
-        cameraList.add(new Camera("192.168.5.161", settings.getVisca_Port(), 1));
-        cameraList.add(new Camera("192.168.5.161", settings.getVisca_Port(), 1));
-        cameraList.add(new Camera("192.168.5.161", settings.getVisca_Port(), 1));
-        cameraList.add(new Camera("192.168.5.161", settings.getVisca_Port(), 1));
+        logger.info("Added " + cameraList.size() + " Camera's");
+        artNetBuffer = new ArtNetBuffer();
+        artNetClient = new ArtNetClient(artNetBuffer);
 
-        FileManager.saveCamera(cameraList);
+        artNetClient.start("10.1.10.104"); //todo add settings
 
-
+        init();
+        loop();
 
     }
 
+    public void init() {
+        for (Camera camera : cameraList) {
+            camera.connect();
+        }
+    }
 
     public void loop() {
+        double amountOfTicks = 60.0D; //todo change to settings
+        double ns = 1.6666666666666666E7D;
+        long time = System.currentTimeMillis();
+        long lastTime = System.nanoTime();
+        long now = 0L;
+        double delta = 0.0D;
+        int tickCount = 0;
+        int tickTotal = 0;
+
+        while (true) {
+            now = System.nanoTime();
+            delta += (double) (now - lastTime) / ns;
+            lastTime = now;
+            if (delta >= 1.0D) {
+                tick();
+                ++tickTotal;
+                ++tickCount;
+                --delta;
+            }
+
+            if (System.currentTimeMillis() - time >= 1000L) {
+                time += 1000L;
+                if ((double) tickCount != 60.0D) {
+                    if (tickCount < 5) {
+                        logger.fatal("current tick count: " + tickCount + ".");
+                    }
+
+                    logger.debug(tickCount + " Ticks.");
+                }
+
+                tickCount = 0;
+            }
+        }
+    }
+
+
+    public void tick() {
+        byte[] data = artNetClient.readDmxData(0, 0); //todo chnage this to settings
+        for (Camera camera : cameraList) {
+            int i = camera.getAddress();
+            i--;
+            camera.sendPanTilt(Util.get16bitValue(data[i], data[i + 1]), Util.get16bitValue(data[i + 2], data[i + 3]));
+            camera.sendZoom(Util.get16bitValue(data[i + 4], data[i + 5])); //todo add the other functions
+        }
+
 
     }
 
