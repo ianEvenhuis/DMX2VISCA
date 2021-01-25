@@ -12,7 +12,7 @@
 1.  do it
 
 
-##Fixture layout
+## Fixture layout  
 Channel 1 (16bit): Pan  
 Channel 3 (16bit): Tilt  
 Channel 5 (16bit): Zoom  
